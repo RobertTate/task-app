@@ -1,16 +1,40 @@
 const { Router } = require('express');
 const User = require('../models/user');
-const { errorObject } = require('../partials/errorObject');
+const { formatError } = require('../partials/formatError');
 
 const usersRouter = Router()
 
-// GET Routes
+usersRouter.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findByCredentials(email, password);
+    const token = await user.generateAuthToken();
+    await user.save();
+    res.status(200).send({ user, token });
+  } catch(e) {
+    res.status(400).send()
+  }
+});
+
+// CREATE Operations
+usersRouter.post('/signup', async (req, res) => {
+  try {
+    const user = new User(req.body);
+    const token = await user.generateAuthToken();
+    await user.save();
+    res.status(201).send({ user, token });
+  } catch(e) {
+    res.status(400).send(formatError(e));
+  }
+});
+
+// READ Operations
 usersRouter.get('/', async (req, res) => {
   try {
     const users = await User.find({});
     res.status(200).send(users);
   } catch(e) {
-    res.status(500).send(errorObject(e));
+    res.status(500).send(formatError(e));
   }
 });
 
@@ -23,32 +47,20 @@ usersRouter.get('/:id', async (req, res) => {
     }
     res.status(200).send(user);
   } catch(e) {
-    res.status(500).send(errorObject(e));
+    res.status(500).send(formatError(e));
   }
 });
 
-// POST Routes
-usersRouter.post('/', async (req, res) => {
-  try {
-    const user = new User(req.body);
-    await user.save();
-    res.status(201).send(user);
-  } catch(e) {
-    res.status(400).send(errorObject(e));
-  }
-});
-
-// PATCH Routes
+// UPDATE Operations
 usersRouter.patch('/:id', async (req, res) => {
   try {
     const { id: _id } = req.params;
-    const user = await User.findByIdAndUpdate(_id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(404).send();
     }
+    user.set(req.body);
+    await user.save();
     res.status(200).send(user);
   } catch(e) {
     if (
@@ -56,13 +68,13 @@ usersRouter.patch('/:id', async (req, res) => {
       e.name === "StrictModeError" ||
       e.name === "CastError"
     ) {
-      return res.status(400).send(errorObject(e));
+      return res.status(400).send(formatError(e));
     }
-    res.status(500).send(errorObject(e));
+    res.status(500).send(formatError(e));
   }
 });
 
-// DELETE Routes
+// DELETE Operations
 usersRouter.delete('/:id', async (req, res) => {
   try {
     const { id: _id } = req.params;
@@ -72,7 +84,7 @@ usersRouter.delete('/:id', async (req, res) => {
     }
     res.status(200).send(user);
   } catch(e) {
-    res.status(500).send(errorObject(e));
+    res.status(500).send(formatError(e));
   }
 });
 
