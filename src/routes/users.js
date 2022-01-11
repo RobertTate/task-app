@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const User = require('../models/user');
+const authMiddleware = require('../middleware/auth');
 const { formatError } = require('../partials/formatError');
 
 const usersRouter = Router()
@@ -29,13 +30,8 @@ usersRouter.post('/signup', async (req, res) => {
 });
 
 // READ Operations
-usersRouter.get('/', async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.status(200).send(users);
-  } catch(e) {
-    res.status(500).send(formatError(e));
-  }
+usersRouter.get('/me', authMiddleware, async (req, res) => {
+  res.status(200).send(req.user);
 });
 
 usersRouter.get('/:id', async (req, res) => {
