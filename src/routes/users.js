@@ -17,6 +17,30 @@ usersRouter.post('/login', async (req, res) => {
   }
 });
 
+usersRouter.post('/logout',  authMiddleware, async (req, res) => {
+  try {
+    // Check this later to see if we can use MongooseDocumentArray.prototype.pull() instead of a filter
+    // https://mongoosejs.com/docs/api.html#mongoosedocumentarray_MongooseDocumentArray-pull
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token !== req.token;
+    });
+    await req.user.save();
+    res.status(200).send();
+  } catch(e) {
+    res.status(500).send();
+  }
+}),
+
+usersRouter.post('/logoutAll', authMiddleware, async (req, res) => {
+  try {
+    req.user.tokens = [];
+    await req.user.save();
+    res.status(200).send();
+  } catch(e) {
+    res.status(500).send()
+  };
+});
+
 // CREATE Operations
 usersRouter.post('/signup', async (req, res) => {
   try {
