@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const User = require('../models/user');
 const authMiddleware = require('../middleware/auth');
-const { formatError } = require('../partials/formatError');
+const { formatError, getStatusCode } = require('../partials/errorHandling');
 
 const usersRouter = Router()
 
@@ -19,8 +19,6 @@ usersRouter.post('/login', async (req, res) => {
 
 usersRouter.post('/logout',  authMiddleware, async (req, res) => {
   try {
-    // Check this later to see if we can use MongooseDocumentArray.prototype.pull() instead of a filter
-    // https://mongoosejs.com/docs/api.html#mongoosedocumentarray_MongooseDocumentArray-pull
     req.user.tokens = req.user.tokens.filter((token) => {
       return token.token !== req.token;
     });
@@ -58,51 +56,22 @@ usersRouter.get('/me', authMiddleware, async (req, res) => {
   res.status(200).send(req.user);
 });
 
-usersRouter.get('/:id', async (req, res) => {
-  try {
-    const { id: _id } = req.params;
-    const user = await User.findById(_id);
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.status(200).send(user);
-  } catch(e) {
-    res.status(500).send(formatError(e));
-  }
-});
-
 // UPDATE Operations
-usersRouter.patch('/:id', async (req, res) => {
+usersRouter.patch('/me', authMiddleware, async (req, res) => {
   try {
-    const { id: _id } = req.params;
-    const user = await User.findById(_id);
-    if (!user) {
-      return res.status(404).send();
-    }
-    user.set(req.body);
-    await user.save();
-    res.status(200).send(user);
+    req.user.set(req.body);
+    await req.user.save();
+    res.status(200).send(req.user);
   } catch(e) {
-    if (
-      e.name === "ValidationError" || 
-      e.name === "StrictModeError" ||
-      e.name === "CastError"
-    ) {
-      return res.status(400).send(formatError(e));
-    }
-    res.status(500).send(formatError(e));
+    res.status(getStatusCode(e)).send(formatError(e));
   }
 });
 
 // DELETE Operations
-usersRouter.delete('/:id', async (req, res) => {
+usersRouter.delete('/me', authMiddleware, async (req, res) => {
   try {
-    const { id: _id } = req.params;
-    const user = await User.findByIdAndDelete(_id);
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.status(200).send(user);
+    await req.user.remove();
+    res.status(200).send(req.user);
   } catch(e) {
     res.status(500).send(formatError(e));
   }

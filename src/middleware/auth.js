@@ -1,6 +1,12 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
+/**
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {NextFunction} next
+ * @returns {void}  Checks if a request is authentic and tied to a real user. If so, that user is added to the request object.
+ */
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.header('Authorization').replace('Bearer ', '');
