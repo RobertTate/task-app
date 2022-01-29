@@ -49,7 +49,10 @@ const userSchema = new mongoose.Schema({
       required: true
     }
   }]
-}, { strict: 'throw' });
+}, { 
+  strict: 'throw',
+  timestamps: true 
+});
 
 userSchema.virtual('tasks', {
   ref: 'Task',

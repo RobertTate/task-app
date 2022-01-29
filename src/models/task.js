@@ -16,7 +16,10 @@ const taskSchema = new mongoose.Schema({
     required: true,
     ref: 'User'
   }
-}, { strict: 'throw' });
+}, { 
+  strict: 'throw',
+  timestamps: true 
+});
 
 const Task = mongoose.model('Task', taskSchema);
 
