@@ -21,7 +21,7 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch(e) {
     res.status(401).send({ 'error': 'Please Authenticate.'});
-  }
-}
+  };
+};
 
 module.exports = authMiddleware
