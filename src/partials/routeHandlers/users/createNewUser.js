@@ -1,4 +1,5 @@
 const User = require('../../../models/user');
+const { sendWelcomeEmail } = require('../../../emails/emailFunctions');
 const { formatError } = require('../../errorHandling');
 
 /**
@@ -11,6 +12,7 @@ async function createNewUser(req, res) {
     const user = new User(req.body);
     const token = await user.generateAuthToken();
     await user.save();
+    sendWelcomeEmail(user.email, user.name);
     res.status(201).send({ user, token });
   } catch(e) {
     res.status(400).send(formatError(e));
