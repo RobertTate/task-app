@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node --require dotenv/config src/index.js",
+    "dev": "nodemon --require dotenv/config src/index.js",
+    "test": "cross-env DOTENV_CONFIG_PATH=./.env.test jest --setupFiles dotenv/config --detectOpenHandles --runInBand"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +27,9 @@
     "validator": "^13.7.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "cross-env": "^7.0.3",
+    "jest": "^27.5.1",
+    "nodemon": "^2.0.15",
+    "supertest": "^6.2.2"
   }
 }
